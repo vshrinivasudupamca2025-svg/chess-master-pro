@@ -4,505 +4,378 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#10131b">
 <title>Chess Master Pro</title>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-
 <style>
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    background: #10131b;
-    color: #f1f5f9;
-    font-family: Arial, sans-serif;
-    min-height: 100vh;
-}
-
-header {
-    padding: 22px;
-    text-align: center;
-    background: #171c28;
-    border-bottom: 1px solid #30394b;
-}
-
-header h1 {
-    color: #eabf69;
-    font-size: 28px;
-    letter-spacing: 2px;
-}
-
-header p {
-    color: #929bad;
-    margin-top: 7px;
-    font-size: 13px;
-}
-
-.container {
-    max-width: 1100px;
-    margin: 30px auto;
-    padding: 15px;
-    display: grid;
-    grid-template-columns: minmax(280px, 580px) minmax(250px, 1fr);
-    gap: 25px;
-}
-
-.game-area {
-    background: #1b2230;
-    padding: 18px;
-    border-radius: 16px;
-    border: 1px solid #30394b;
-}
-
-.player {
-    padding: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #252e40;
-    border-radius: 8px;
-    margin: 8px 0;
-}
-
-.player.active {
-    border: 1px solid #eabf69;
-}
-
-.player span:last-child {
-    color: #eabf69;
-    font-weight: bold;
-}
-
-.board {
-    width: 100%;
-    aspect-ratio: 1;
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    border: 5px solid #30394b;
-    border-radius: 5px;
-    overflow: hidden;
-}
-
-.square {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: clamp(25px, 6vw, 53px);
-    cursor: pointer;
-    position: relative;
-    user-select: none;
-}
-
-.light { background: #e8d5b5; }
-.dark { background: #77916e; }
-
-.square.selected {
-    background: #d9bc52;
-}
-
-.square.last {
-    box-shadow: inset 0 0 0 4px #e9c65e;
-}
-
-.square.check {
-    background: #cf5555;
-}
-
-.square.possible::after {
-    content: "";
-    position: absolute;
-    width: 25%;
-    height: 25%;
-    border-radius: 50%;
-    background: rgba(20,20,20,0.4);
-}
-
-.square.capture::after {
-    content: "";
-    position: absolute;
-    width: 85%;
-    height: 85%;
-    border: 4px solid rgba(190,30,30,0.7);
-    border-radius: 50%;
-}
-
-.piece {
-    position: relative;
-    z-index: 1;
-    line-height: 1;
-}
-
-.white-piece {
-    color: #ffffff;
-    text-shadow: 1px 2px 3px #333;
-}
-
-.black-piece {
-    color: #161616;
-    text-shadow: 1px 1px 2px #fff;
-}
-
-.side-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.panel {
-    background: #1b2230;
-    padding: 18px;
-    border: 1px solid #30394b;
-    border-radius: 12px;
-}
-
-.panel h2 {
-    font-size: 17px;
-    margin-bottom: 15px;
-    color: #eabf69;
-}
-
-select, button {
-    width: 100%;
-    padding: 12px;
-    border-radius: 7px;
-    border: 1px solid #3c465b;
-    background: #252e40;
-    color: white;
-    font-size: 14px;
-    margin-bottom: 10px;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #37445b;
-}
-
-.primary {
-    background: #b58a43;
-    color: #151515;
-    border: none;
-    font-weight: bold;
-}
-
-.primary:hover {
-    background: #d0a75e;
-}
-
-.timer {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.time-box {
-    flex: 1;
-    padding: 15px 5px;
-    background: #111722;
-    text-align: center;
-    border-radius: 8px;
-}
-
-.time-box h3 {
-    color: #929bad;
-    font-size: 12px;
-    margin-bottom: 8px;
-}
-
-.time-box p {
-    font-size: 24px;
-    font-weight: bold;
-    color: #eabf69;
-}
-
-.status {
-    background: #111722;
-    padding: 13px;
-    border-radius: 8px;
-    color: #eabf69;
-    text-align: center;
-    font-size: 14px;
-}
-
-.history {
-    height: 180px;
-    overflow-y: auto;
-    font-size: 13px;
-    color: #cbd5e1;
-}
-
-.history-row {
-    display: grid;
-    grid-template-columns: 35px 1fr 1fr;
-    padding: 8px;
-    border-bottom: 1px solid #30394b;
-}
-
-.history-row:nth-child(even) {
-    background: #252e40;
-}
-
-.footer {
-    text-align: center;
-    color: #697386;
-    font-size: 12px;
-    padding: 25px;
-}
-
-@media(max-width: 750px) {
-    .container {
-        grid-template-columns: 1fr;
-        max-width: 550px;
-        margin: 12px auto;
-    }
-
-    .game-area {
-        padding: 10px;
-    }
-
-    header h1 {
-        font-size: 23px;
-    }
-}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#10131b;color:#f1f5f9;font-family:Arial,sans-serif;min-height:100vh}
+header{padding:22px;text-align:center;background:#171c28;border-bottom:1px solid #30394b}
+header h1{color:#eabf69;font-size:28px;letter-spacing:2px}
+header p{color:#929bad;margin-top:7px;font-size:13px}
+.container{max-width:1100px;margin:25px auto;padding:15px;display:grid;grid-template-columns:minmax(280px,580px) minmax(250px,1fr);gap:22px}
+.game-area,.panel{background:#1b2230;border:1px solid #30394b;border-radius:14px}
+.game-area{padding:16px}
+.player{padding:11px;display:flex;justify-content:space-between;align-items:center;background:#252e40;border-radius:8px;margin:8px 0}
+.player.active{outline:2px solid #eabf69}
+.player span:last-child{color:#eabf69;font-weight:bold}
+.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);border:5px solid #30394b;border-radius:5px;overflow:hidden}
+.square{display:flex;justify-content:center;align-items:center;font-size:clamp(25px,6vw,53px);cursor:pointer;position:relative;user-select:none}
+.light{background:#e8d5b5}.dark{background:#77916e}
+.square.selected{background:#d9bc52}
+.square.last{box-shadow:inset 0 0 0 4px #e9c65e}
+.square.check{background:#cf5555}
+.square.possible:after{content:"";position:absolute;width:25%;height:25%;border-radius:50%;background:#2228}
+.square.capture:after{content:"";position:absolute;width:85%;height:85%;border:4px solid #c33b99;border-radius:50%}
+.piece{position:relative;z-index:1;line-height:1}
+.white-piece{color:#fff;text-shadow:1px 2px 3px #333}
+.black-piece{color:#161616;text-shadow:1px 1px 2px #fff}
+.side-panel{display:flex;flex-direction:column;gap:14px}
+.panel{padding:17px}
+.panel h2{font-size:17px;margin-bottom:13px;color:#eabf69}
+label{display:block;font-size:13px;color:#cbd5e1;margin:9px 0 5px}
+select,button{width:100%;padding:12px;border-radius:7px;border:1px solid #3c465b;background:#252e40;color:white;font-size:14px;margin-bottom:9px}
+button{cursor:pointer}button:hover{background:#37445b}
+.primary{background:#b58a43;color:#151515;border:none;font-weight:bold}.primary:hover{background:#d0a75e}
+.timer{display:flex;gap:10px}.time-box{flex:1;padding:14px 5px;background:#111722;text-align:center;border-radius:8px}
+.time-box h3{color:#929bad;font-size:12px;margin-bottom:8px}.time-box p{font-size:24px;font-weight:bold;color:#eabf69}
+.status{background:#111722;padding:13px;border-radius:8px;color:#eabf69;text-align:center;font-size:14px;margin-top:12px}
+.history{height:180px;overflow-y:auto;font-size:13px;color:#cbd5e1}
+.history-row{display:grid;grid-template-columns:35px 1fr 1fr;padding:8px;border-bottom:1px solid #30394b}
+.history-row:nth-child(even){background:#252e40}
+.note{font-size:12px;color:#9ca8ba;line-height:1.5;margin-top:8px}
+.footer{text-align:center;color:#697386;font-size:12px;padding:22px}
+@media(max-width:750px){.container{grid-template-columns:1fr;max-width:550px;margin:10px auto}.game-area{padding:10px}header h1{font-size:23px}}
 </style>
 </head>
-
 <body>
-
-<header>
-    <h1>♛ CHESS MASTER PRO</h1>
-    <p>Think Strategically. Play Brilliantly.</p>
-</header>
-
+<header><h1>♛ CHESS MASTER PRO</h1><p>Think Strategically. Play Brilliantly.</p></header>
 <main class="container">
-
-    <section class="game-area">
-
-        <div class="player" id="blackPlayer">
-            <span>♚ Black Player</span>
-            <span id="blackLabel">Computer</span>
-        </div>
-
-        <div class="board" id="board"></div>
-
-        <div class="player active" id="whitePlayer">
-            <span>♔ White Player</span>
-            <span id="whiteLabel">You</span>
-        </div>
-
-        <div style="margin-top:15px" class="status" id="status">
-            White's turn
-        </div>
-
-    </section>
-
-    <aside class="side-panel">
-
-        <div class="panel">
-            <h2>⚙ Game Settings</h2>
-
-            <label>Game Mode</label>
-            <select id="mode">
-                <option value="computer">Play vs Computer</option>
-                <option value="two">Two Players</option>
-            </select>
-
-            <label>Computer Difficulty</label>
-            <select id="difficulty">
-                <option value="1">Easy</option>
-                <option value="2">Medium</option>
-                <option value="3">Hard</option>
-                <option value="3">Expert</option>
-            </select>
-
-            <label>Game Timer</label>
-            <select id="timerSetting">
-                <option value="0">Timer Off</option>
-                <option value="5">5 Minutes</option>
-                <option value="10">10 Minutes</option>
-                <option value="15">15 Minutes</option>
-                <option value="30">30 Minutes</option>
-            </select>
-
-            <button class="primary" onclick="startGame()">
-                New Game
-            </button>
-
-            <button onclick="undoMove()">↶ Undo Move</button>
-            <button onclick="flipBoard()">⇅ Flip Board</button>
-        </div>
-
-        <div class="panel">
-            <h2>⏱ Chess Clock</h2>
-
-            <div class="timer">
-                <div class="time-box">
-                    <h3>WHITE</h3>
-                    <p id="whiteTime">--:--</p>
-                </div>
-
-                <div class="time-box">
-                    <h3>BLACK</h3>
-                    <p id="blackTime">--:--</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="panel">
-            <h2>📜 Move History</h2>
-            <div class="history" id="history">
-                No moves yet.
-            </div>
-        </div>
-
-        <div class="panel">
-            <h2>♟ About the Game</h2>
-            <p style="font-size:13px;line-height:1.8;color:#aab4c5">
-                Challenge yourself against an intelligent chess
-                opponent. Improve your skills, learn strategies
-                and enjoy every move.
-            </p>
-        </div>
-
-    </aside>
-
+<section class="game-area">
+  <div class="player" id="blackPlayer"><span>♚ Black Player</span><span id="blackLabel">Computer</span></div>
+  <div class="board" id="board" aria-label="Chess board"></div>
+  <div class="player active" id="whitePlayer"><span>♔ White Player</span><span id="whiteLabel">You</span></div>
+  <div class="status" id="status" aria-live="polite">White's turn</div>
+</section>
+<aside class="side-panel">
+  <div class="panel">
+    <h2>⚙ Game Settings</h2>
+    <label for="mode">Game Mode</label>
+    <select id="mode"><option value="computer">Play vs Computer</option><option value="two">Two Players</option></select>
+    <label for="difficulty">Computer Difficulty</label>
+    <select id="difficulty"><option value="1">Easy</option><option value="2">Medium</option><option value="3">Hard</option><option value="3">Expert</option></select>
+    <label for="timerSetting">Game Timer</label>
+    <select id="timerSetting"><option value="0">Timer Off</option><option value="5">5 Minutes</option><option value="10">10 Minutes</option><option value="15">15 Minutes</option><option value="30">30 Minutes</option></select>
+    <button class="primary" id="newGame">New Game</button>
+    <button id="undo">↶ Undo Move</button>
+    <button id="flip">⇅ Flip Board</button>
+  </div>
+  <div class="panel"><h2>⏱ Chess Clock</h2><div class="timer">
+    <div class="time-box"><h3>WHITE</h3><p id="whiteTime">--:--</p></div>
+    <div class="time-box"><h3>BLACK</h3><p id="blackTime">--:--</p></div>
+  </div></div>
+  <div class="panel"><h2>📜 Move History</h2><div class="history" id="history">No moves yet.</div></div>
+  <div class="panel"><h2>♟ About the Game</h2><p class="note">Play against the computer or another player. Choose a difficulty, use the timer, review moves and undo a turn.</p></div>
+</aside>
 </main>
-
-<div class="footer">
-    Chess Master Pro | Designed for Chess Lovers
-</div>
-
+<div class="footer">Chess Master Pro | Designed for Chess Lovers</div>
 <script>
+(function(){
+"use strict";
+
+if(typeof Chess === "undefined"){
+  document.getElementById("status").textContent =
+    "Chess engine could not load. Check your internet connection and reload.";
+  return;
+}
 
 let game = new Chess();
-
 let selectedSquare = null;
 let possibleMoves = [];
 let flipped = false;
-let gameStarted = false;
 let gameOver = false;
-
+let botThinking = false;
 let whiteSeconds = 0;
 let blackSeconds = 0;
 let timerInterval = null;
 
-const pieces = {
-    wk: "♔", wq: "♕", wr: "♖",
-    wb: "♗", wn: "♘", wp: "♙",
-
-    bk: "♚", bq: "♛", br: "♜",
-    bb: "♝", bn: "♞", bp: "♟"
+const symbols = {
+  wk:"♔", wq:"♕", wr:"♖", wb:"♗", wn:"♘", wp:"♙",
+  bk:"♚", bq:"♛", br:"♜", bb:"♝", bn:"♞", bp:"♟"
 };
+const values = {p:100,n:320,b:330,r:500,q:900,k:20000};
+const $ = id => document.getElementById(id);
 
-function startGame() {
+function isComputerMode(){ return $("mode").value === "computer"; }
+function currentSideName(){ return game.turn() === "w" ? "White" : "Black"; }
 
-    game.reset();
+function startGame(){
+  game.reset();
+  selectedSquare = null;
+  possibleMoves = [];
+  flipped = false;
+  gameOver = false;
+  botThinking = false;
+  clearInterval(timerInterval);
 
+  const minutes = Number($("timerSetting").value);
+  whiteSeconds = minutes * 60;
+  blackSeconds = minutes * 60;
+  updateClock();
+
+  if(minutes > 0) timerInterval = setInterval(updateTimer,1000);
+
+  $("whiteLabel").textContent = isComputerMode() ? "You" : "Player 1";
+  $("blackLabel").textContent = isComputerMode() ? "Computer" : "Player 2";
+  renderBoard();
+  updateHistory();
+  updateStatus();
+}
+
+function renderBoard(){
+  const el = $("board");
+  el.innerHTML = "";
+  const board = game.board();
+  const last = game.history({verbose:true}).slice(-1)[0];
+  let rows = [0,1,2,3,4,5,6,7], cols = [0,1,2,3,4,5,6,7];
+  if(flipped){ rows.reverse(); cols.reverse(); }
+
+  rows.forEach(r => cols.forEach(c => {
+    const square = document.createElement("div");
+    square.className = "square " + ((r+c)%2===0 ? "light" : "dark");
+    const name = String.fromCharCode(97+c) + (8-r);
+
+    if(selectedSquare === name) square.classList.add("selected");
+    if(last && (last.from === name || last.to === name)) square.classList.add("last");
+    const piece = board[r][c];
+
+    if(game.in_check() && piece && piece.type === "k" && piece.color === game.turn()){
+      square.classList.add("check");
+    }
+    const legal = possibleMoves.find(m => m.to === name);
+    if(legal) square.classList.add(legal.captured ? "capture" : "possible");
+
+    if(piece){
+      const span = document.createElement("span");
+      span.className = "piece " + (piece.color === "w" ? "white-piece" : "black-piece");
+      span.textContent = symbols[piece.color + piece.type];
+      square.appendChild(span);
+    }
+    square.addEventListener("click",() => handleSquareClick(name));
+    el.appendChild(square);
+  }));
+
+  $("whitePlayer").classList.toggle("active",game.turn()==="w");
+  $("blackPlayer").classList.toggle("active",game.turn()==="b");
+}
+
+function handleSquareClick(name){
+  if(gameOver || botThinking) return;
+  if(isComputerMode() && game.turn()==="b") return;
+
+  if(selectedSquare){
+    const move = possibleMoves.find(m => m.to === name);
+    if(move){ playMove(selectedSquare,name); return; }
+  }
+
+  const piece = game.get(name);
+  if(piece && piece.color === game.turn()){
+    selectedSquare = name;
+    possibleMoves = game.moves({square:name,verbose:true});
+  }else{
     selectedSquare = null;
     possibleMoves = [];
-    flipped = false;
-    gameOver = false;
-    gameStarted = true;
-
-    clearInterval(timerInterval);
-
-    const minutes = Number(
-        document.getElementById("timerSetting").value
-    );
-
-    whiteSeconds = minutes * 60;
-    blackSeconds = minutes * 60;
-
-    updateClock();
-
-    if (minutes > 0) {
-        timerInterval = setInterval(updateTimer, 1000);
-    }
-
-    updateLabels();
-    renderBoard();
-    updateStatus();
-    updateHistory();
+  }
+  renderBoard();
 }
 
-function updateLabels() {
+function playMove(from,to){
+  let move;
+  try{
+    move = game.move({from:from,to:to,promotion:"q"});
+  }catch(e){ move = null; }
+  if(!move) return;
 
-    const computer =
-        document.getElementById("mode").value === "computer";
+  selectedSquare = null;
+  possibleMoves = [];
+  renderBoard();
+  updateHistory();
+  updateStatus();
 
-    document.getElementById("whiteLabel").textContent = "You";
-
-    document.getElementById("blackLabel").textContent =
-        computer ? "Computer" : "Player 2";
+  if(!gameOver && isComputerMode() && game.turn()==="b"){
+    botThinking = true;
+    $("status").textContent = "Computer is thinking...";
+    setTimeout(computerMove,180);
+  }
 }
 
-function renderBoard() {
-
-    const boardElement = document.getElementById("board");
-
-    boardElement.innerHTML = "";
-
-    const board = game.board();
-
-    const lastMove = game.history({ verbose: true }).slice(-1)[0];
-
-    let rows = [0,1,2,3,4,5,6,7];
-    let cols = [0,1,2,3,4,5,6,7];
-
-    if (flipped) {
-        rows.reverse();
-        cols.reverse();
+function evaluateBoard(aiColor){
+  let score = 0;
+  const board = game.board();
+  for(let r=0;r<8;r++){
+    for(let c=0;c<8;c++){
+      const p = board[r][c];
+      if(!p) continue;
+      let value = values[p.type];
+      const center = 3.5 - (Math.abs(3.5-r)+Math.abs(3.5-c))/2;
+      if(p.type==="n" || p.type==="b") value += center*12;
+      if(p.type==="p") value += (p.color==="w" ? 6-r : r-1)*5;
+      score += p.color===aiColor ? value : -value;
     }
+  }
+  return score;
+}
 
-    rows.forEach(r => {
+function minimax(depth,alpha,beta,maximizing,aiColor){
+  if(game.in_checkmate()) return game.turn()===aiColor ? -100000-depth : 100000+depth;
+  if(game.in_draw()) return 0;
+  if(depth===0) return evaluateBoard(aiColor);
 
-        cols.forEach(c => {
+  const moves = game.moves({verbose:true});
+  if(maximizing){
+    let best = -Infinity;
+    for(const m of moves){
+      game.move({from:m.from,to:m.to,promotion:m.promotion || "q"});
+      const score = minimax(depth-1,alpha,beta,false,aiColor);
+      game.undo();
+      best = Math.max(best,score);
+      alpha = Math.max(alpha,score);
+      if(beta<=alpha) break;
+    }
+    return best;
+  }else{
+    let best = Infinity;
+    for(const m of moves){
+      game.move({from:m.from,to:m.to,promotion:m.promotion || "q"});
+      const score = minimax(depth-1,alpha,beta,true,aiColor);
+      game.undo();
+      best = Math.min(best,score);
+      beta = Math.min(beta,score);
+      if(beta<=alpha) break;
+    }
+    return best;
+  }
+}
 
-            const square = document.createElement("div");
+function computerMove(){
+  if(gameOver || game.turn()!=="b"){ botThinking=false; return; }
 
-            const isLight = (r + c) % 2 === 0;
+  const depth = Number($("difficulty").value);
+  const moves = game.moves({verbose:true});
+  if(!moves.length){ botThinking=false; updateStatus(); return; }
 
-            square.className =
-                "square " + (isLight ? "light" : "dark");
+  let bestScore = -Infinity;
+  let bestMoves = [];
+  for(const m of moves){
+    game.move({from:m.from,to:m.to,promotion:m.promotion || "q"});
+    const score = minimax(depth-1,-Infinity,Infinity,false,"b");
+    game.undo();
+    if(score>bestScore){ bestScore=score; bestMoves=[m]; }
+    else if(score===bestScore){ bestMoves.push(m); }
+  }
 
-            const squareName =
-                String.fromCharCode(97 + c) + (8 - r);
+  const chosen = bestMoves[Math.floor(Math.random()*bestMoves.length)];
+  game.move({from:chosen.from,to:chosen.to,promotion:chosen.promotion || "q"});
+  botThinking = false;
+  renderBoard();
+  updateHistory();
+  updateStatus();
+}
 
-            if (selectedSquare === squareName) {
-                square.classList.add("selected");
-            }
+function updateStatus(){
+  const status = $("status");
+  if(game.in_checkmate()){
+    status.textContent = "Checkmate! " + (game.turn()==="w" ? "Black" : "White") + " wins!";
+    finishGame(); return;
+  }
+  if(game.in_stalemate()){
+    status.textContent = "Draw by stalemate!";
+    finishGame(); return;
+  }
+  if(game.insufficient_material() || game.in_threefold_repetition() || game.in_draw()){
+    status.textContent = "Game drawn!";
+    finishGame(); return;
+  }
+  status.textContent = game.in_check() ? currentSideName()+" is in check!" : currentSideName()+"'s turn";
+}
 
-            if (lastMove &&
-                (lastMove.from === squareName ||
-                 lastMove.to === squareName)) {
-                square.classList.add("last");
-            }
+function finishGame(){
+  gameOver = true;
+  botThinking = false;
+  clearInterval(timerInterval);
+}
 
-            if (game.in_check() &&
-                board[r][c] &&
-                board[r][c].type === "k" &&
-                board[r][c].color === game.turn()) {
-                square.classList.add("check");
-            }
+function updateHistory(){
+  const el = $("history");
+  const history = game.history();
+  el.innerHTML = "";
+  if(!history.length){ el.textContent = "No moves yet."; return; }
+  for(let i=0;i<history.length;i+=2){
+    const row = document.createElement("div");
+    row.className = "history-row";
+    const n=document.createElement("span"), w=document.createElement("span"), b=document.createElement("span");
+    n.textContent=(i/2+1)+".";
+    w.textContent=history[i] || "";
+    b.textContent=history[i+1] || "";
+    row.append(n,w,b);
+    el.appendChild(row);
+  }
+  el.scrollTop=el.scrollHeight;
+}
 
-            const move = possibleMoves.find(
-                m => m.to === squareName
-            );
+function undoMove(){
+  if(!game.history().length) return;
+  game.undo();
+  if(isComputerMode() && game.turn()==="b" && game.history().length) game.undo();
+  gameOver=false;
+  botThinking=false;
+  selectedSquare=null;
+  possibleMoves=[];
+  renderBoard();
+  updateHistory();
+  updateStatus();
+}
 
-            if (move) {
-                square.classList.add(
-                    move.captured ? "capture" : "possible"
-                );
-            }
+function flipBoard(){ flipped=!flipped; renderBoard(); }
 
-            const piece = board[r][c];
+function formatTime(seconds){
+  return String(Math.floor(seconds/60)).padStart(2,"0")+":"+
+         String(seconds%60).padStart(2,"0");
+}
+function updateClock(){
+  const enabled=Number($("timerSetting").value)>0;
+  $("whiteTime").textContent=enabled?formatTime(whiteSeconds):"--:--";
+  $("blackTime").textContent=enabled?formatTime(blackSeconds):"--:--";
+}
+function updateTimer(){
+  if(gameOver || !gameStarted()) return;
+  if(game.turn()==="w") whiteSeconds--; else blackSeconds--;
+  if(whiteSeconds<=0){
+    whiteSeconds=0; $("status").textContent="White ran out of time. Black wins!"; finishGame();
+  }else if(blackSeconds<=0){
+    blackSeconds=0; $("status").textContent="Black ran out of time. White wins!"; finishGame();
+  }
+  updateClock();
+}
+function gameStarted(){ return !gameOver; }
 
-            if (piece) {
+$("newGame").addEventListener("click",startGame);
+$("undo").addEventListener("click",undoMove);
+$("flip").addEventListener("click",flipBoard);
+$("mode").addEventListener("change",startGame);
+$("timerSetting").addEventListener("change",startGame);
+$("difficulty").addEventListener("change",() => {
+  if(isComputerMode() && game.turn()==="b" && !gameOver && !botThinking){
+    botThinking=true; setTimeout(computerMove,100);
+  }
+});
 
-                const symbol =
-                    pieces[piece.color + piece.type];
+startGame();
+})();
+</script>
+</body>
+</html>
+pieces[piece.color + piece.type];
 
                 const span = document.createElement("span");
 
