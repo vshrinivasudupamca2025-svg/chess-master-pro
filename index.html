@@ -4,239 +4,1373 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#10131b">
+<meta name="theme-color" content="#0b1020">
 <title>Chess Master Pro</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#10131b;color:#f1f5f9;font-family:Arial,sans-serif;min-height:100vh}
-header{padding:22px;text-align:center;background:#171c28;border-bottom:1px solid #30394b}
-header h1{color:#eabf69;font-size:28px;letter-spacing:2px}
-header p{color:#929bad;margin-top:7px;font-size:13px}
-.container{max-width:1100px;margin:25px auto;padding:15px;display:grid;grid-template-columns:minmax(280px,580px) minmax(250px,1fr);gap:22px}
-.game-area,.panel{background:#1b2230;border:1px solid #30394b;border-radius:14px}
-.game-area{padding:16px}
-.player{padding:11px;display:flex;justify-content:space-between;align-items:center;background:#252e40;border-radius:8px;margin:8px 0}
-.player.active{outline:2px solid #eabf69}
-.player span:last-child{color:#eabf69;font-weight:bold}
-.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);border:5px solid #30394b;border-radius:5px;overflow:hidden}
-.square{display:flex;justify-content:center;align-items:center;font-size:clamp(25px,6vw,53px);cursor:pointer;position:relative;user-select:none}
-.light{background:#e8d5b5}.dark{background:#77916e}
-.square.selected{background:#d9bc52}
-.square.last{box-shadow:inset 0 0 0 4px #e9c65e}
-.square.check{background:#cf5555}
-.square.possible:after{content:"";position:absolute;width:25%;height:25%;border-radius:50%;background:#2228}
-.square.capture:after{content:"";position:absolute;width:85%;height:85%;border:4px solid #c33b99;border-radius:50%}
-.piece{position:relative;z-index:1;line-height:1}
-.white-piece{color:#fff;text-shadow:1px 2px 3px #333}
-.black-piece{color:#161616;text-shadow:1px 1px 2px #fff}
-.side-panel{display:flex;flex-direction:column;gap:14px}
-.panel{padding:17px}
-.panel h2{font-size:17px;margin-bottom:13px;color:#eabf69}
-label{display:block;font-size:13px;color:#cbd5e1;margin:9px 0 5px}
-select,button{width:100%;padding:12px;border-radius:7px;border:1px solid #3c465b;background:#252e40;color:white;font-size:14px;margin-bottom:9px}
-button{cursor:pointer}button:hover{background:#37445b}
-.primary{background:#b58a43;color:#151515;border:none;font-weight:bold}.primary:hover{background:#d0a75e}
-.timer{display:flex;gap:10px}.time-box{flex:1;padding:14px 5px;background:#111722;text-align:center;border-radius:8px}
-.time-box h3{color:#929bad;font-size:12px;margin-bottom:8px}.time-box p{font-size:24px;font-weight:bold;color:#eabf69}
-.status{background:#111722;padding:13px;border-radius:8px;color:#eabf69;text-align:center;font-size:14px;margin-top:12px}
-.history{height:180px;overflow-y:auto;font-size:13px;color:#cbd5e1}
-.history-row{display:grid;grid-template-columns:35px 1fr 1fr;padding:8px;border-bottom:1px solid #30394b}
-.history-row:nth-child(even){background:#252e40}
-.note{font-size:12px;color:#9ca8ba;line-height:1.5;margin-top:8px}
-.footer{text-align:center;color:#697386;font-size:12px;padding:22px}
-@media(max-width:750px){.container{grid-template-columns:1fr;max-width:550px;margin:10px auto}.game-area{padding:10px}header h1{font-size:23px}}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+--bg:#090e1b;
+--panel:#121a2b;
+--panel2:#182338;
+--line:#293650;
+--gold:#e8bd70;
+--muted:#91a0b8;
+--text:#f4f6fb;
+--green:#75c6a0;
+--sq-light:#e9dfcc;
+--sq-dark:#718b78;
+}
+
+* {
+box-sizing:border-box;
+}
+
+body {
+margin:0;
+min-height:100vh;
+color:var(--text);
+font-family:'DM Sans',Arial,sans-serif;
+background:
+radial-gradient(ellipse at 12% 0%,#1b2b48 0,transparent 38%),
+radial-gradient(ellipse at 100% 20%,#29213a 0,transparent 30%),
+var(--bg);
+}
+
+button,select {
+font:inherit;
+}
+
+.topbar {
+height:76px;
+padding:0 clamp(16px,4vw,54px);
+display:flex;
+align-items:center;
+justify-content:space-between;
+border-bottom:1px solid #ffffff12;
+background:#0a1020bb;
+backdrop-filter:blur(14px);
+position:sticky;
+top:0;
+z-index:5;
+}
+
+.brand {
+display:flex;
+align-items:center;
+gap:12px;
+}
+
+.brand-mark {
+width:42px;
+height:42px;
+border-radius:13px;
+display:grid;
+place-items:center;
+background:linear-gradient(145deg,#f4d69a,#b98542);
+color:#182033;
+font-size:25px;
+box-shadow:0 7px 24px #d5a45b33;
+}
+
+.brand-name {
+font-family:'Space Grotesk',sans-serif;
+font-weight:700;
+font-size:18px;
+}
+
+.brand-sub {
+font-size:10px;
+color:var(--muted);
+letter-spacing:2px;
+text-transform:uppercase;
+margin-top:3px;
+}
+
+.top-pill {
+border:1px solid #ffffff19;
+border-radius:30px;
+padding:8px 13px;
+color:var(--muted);
+font-size:12px;
+}
+
+.layout {
+max-width:1200px;
+margin:28px auto;
+padding:0 18px 32px;
+display:grid;
+grid-template-columns:minmax(300px,min(62vw,690px)) minmax(270px,1fr);
+gap:22px;
+align-items:start;
+}
+
+.game-card,.panel {
+background:linear-gradient(145deg,#172238ee,#101828f2);
+border:1px solid var(--line);
+border-radius:20px;
+box-shadow:0 18px 50px #0004;
+}
+
+.game-card {
+padding:clamp(12px,2vw,22px);
+}
+
+.board-head {
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin:0 2px 12px;
+}
+
+.playerline {
+display:flex;
+align-items:center;
+gap:10px;
+color:#dce3ef;
+font-weight:600;
+font-size:14px;
+}
+
+.avatar {
+width:34px;
+height:34px;
+border-radius:11px;
+display:grid;
+place-items:center;
+background:#28364f;
+font-size:20px;
+}
+
+.playerline small {
+display:block;
+color:var(--muted);
+font-weight:400;
+font-size:11px;
+margin-top:2px;
+}
+
+.turn-tag {
+font-size:10px;
+letter-spacing:1px;
+text-transform:uppercase;
+color:var(--muted);
+border:1px solid #ffffff1c;
+border-radius:30px;
+padding:6px 9px;
+}
+
+.turn-tag.active {
+color:#182033;
+background:var(--gold);
+border-color:var(--gold);
+}
+
+.board-wrap {
+position:relative;
+padding:7px;
+border-radius:12px;
+background:linear-gradient(135deg,#c9a66b,#6e5434);
+box-shadow:0 12px 28px #0006;
+}
+
+.board {
+width:100%;
+aspect-ratio:1;
+display:grid;
+grid-template-columns:repeat(8,1fr);
+overflow:hidden;
+border-radius:5px;
+}
+
+.square {
+position:relative;
+display:grid;
+place-items:center;
+cursor:pointer;
+user-select:none;
+min-width:0;
+min-height:0;
+border:0;
+padding:0;
+}
+
+.square.light {
+background:var(--sq-light);
+}
+
+.square.dark {
+background:var(--sq-dark);
+}
+
+.square.selected {
+background:#e5c45c!important;
+}
+
+.square.last-from:before,
+.square.last-to:before {
+content:"";
+position:absolute;
+inset:0;
+background:#f3d36b66;
+pointer-events:none;
+}
+
+.square.in-check {
+background:#d75c62!important;
+}
+
+.piece {
+position:relative;
+z-index:1;
+font-family:"Arial Unicode MS",serif;
+font-size:clamp(25px,6.5vw,62px);
+line-height:1;
+transform:translateY(-1px);
+transition:transform .12s;
+}
+
+.square:hover .piece {
+transform:translateY(-3px);
+}
+
+.white-piece {
+color:#fff;
+text-shadow:0 2px 2px #0009,0 0 1px #222;
+}
+
+.black-piece {
+color:#17202b;
+text-shadow:0 1px 1px #fff8;
+}
+
+.square.legal:after {
+content:"";
+position:absolute;
+width:23%;
+height:23%;
+border-radius:50%;
+background:#18251c66;
+}
+
+.square.legal-capture:after {
+content:"";
+position:absolute;
+inset:5%;
+border:4px solid #9e343b99;
+border-radius:50%;
+}
+
+.coord {
+position:absolute;
+z-index:2;
+font-size:9px;
+font-weight:700;
+opacity:.75;
+pointer-events:none;
+}
+
+.coord.rank {
+left:4px;
+top:3px;
+}
+
+.coord.file {
+right:4px;
+bottom:2px;
+}
+
+.light .coord {
+color:#536b59;
+}
+
+.dark .coord {
+color:#f3e8d5;
+}
+
+.board-foot {
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:13px;
+gap:8px;
+}
+
+.status {
+display:flex;
+align-items:center;
+gap:8px;
+color:#dbe4f2;
+font-size:13px;
+min-height:24px;
+}
+
+.status-dot {
+width:8px;
+height:8px;
+border-radius:50%;
+background:var(--green);
+box-shadow:0 0 12px #75c6a077;
+}
+
+.status-dot.thinking {
+background:var(--gold);
+animation:pulse 1s infinite;
+}
+
+@keyframes pulse {
+50% {opacity:.35;}
+}
+
+.icon-btn {
+border:1px solid #ffffff1c;
+background:#202d43;
+color:#e9edf6;
+border-radius:10px;
+padding:9px 12px;
+cursor:pointer;
+}
+
+.icon-btn:hover,.action:hover {
+filter:brightness(1.15);
+transform:translateY(-1px);
+}
+
+.sidebar {
+display:flex;
+flex-direction:column;
+gap:15px;
+}
+
+.panel {
+padding:18px;
+}
+
+.panel-title {
+font-family:'Space Grotesk',sans-serif;
+font-size:15px;
+font-weight:700;
+margin-bottom:15px;
+display:flex;
+align-items:center;
+gap:9px;
+}
+
+.panel-title .ico {
+color:var(--gold);
+font-size:18px;
+}
+
+.field {
+margin-bottom:12px;
+}
+
+.field label {
+display:block;
+color:var(--muted);
+font-size:11px;
+font-weight:700;
+letter-spacing:.8px;
+text-transform:uppercase;
+margin:0 0 7px;
+}
+
+select {
+width:100%;
+padding:11px 12px;
+color:var(--text);
+background:#0d1627;
+border:1px solid #34435e;
+border-radius:10px;
+outline:none;
+}
+
+select:focus {
+border-color:var(--gold);
+}
+
+.actions {
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px;
+margin-top:5px;
+}
+
+.action {
+border:1px solid #34435e;
+border-radius:10px;
+padding:11px 10px;
+background:#202d43;
+color:#eef2fa;
+font-size:12px;
+font-weight:700;
+cursor:pointer;
+transition:.15s;
+}
+
+.action.primary {
+grid-column:1/-1;
+background:linear-gradient(135deg,#f0d093,#c18e49);
+border:0;
+color:#1b2230;
+}
+
+.action:disabled {
+opacity:.4;
+cursor:not-allowed;
+}
+
+.clock-grid {
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+.clock {
+background:#0c1423;
+border:1px solid #26344c;
+border-radius:13px;
+padding:13px;
+text-align:center;
+}
+
+.clock.active {
+border-color:#d7ad66;
+box-shadow:inset 0 0 0 1px #d7ad6633;
+}
+
+.clock-label {
+font-size:10px;
+letter-spacing:1.3px;
+color:var(--muted);
+font-weight:700;
+}
+
+.clock-time {
+font-family:'Space Grotesk',sans-serif;
+font-size:25px;
+font-weight:700;
+margin-top:6px;
+color:#f5e1bc;
+font-variant-numeric:tabular-nums;
+}
+
+.history {
+max-height:190px;
+overflow:auto;
+}
+
+.history-row {
+display:grid;
+grid-template-columns:32px 1fr 1fr;
+padding:8px 7px;
+border-bottom:1px solid #ffffff0d;
+font-size:12px;
+color:#dbe3ef;
+}
+
+.history-row:nth-child(odd) {
+background:#ffffff06;
+border-radius:6px;
+}
+
+.history-row span:first-child {
+color:var(--muted);
+}
+
+.empty {
+font-size:12px;
+color:var(--muted);
+padding:8px 0;
+}
+
+.captured-row {
+display:flex;
+justify-content:space-between;
+gap:10px;
+color:var(--muted);
+font-size:11px;
+margin-top:10px;
+min-height:19px;
+}
+
+.captured-pieces {
+font-size:17px;
+letter-spacing:1px;
+color:#e4e8ef;
+}
+
+.tip {
+font-size:11px;
+color:var(--muted);
+line-height:1.6;
+margin-top:11px;
+}
+
+.footer {
+text-align:center;
+color:#66758e;
+font-size:11px;
+padding:10px 15px 28px;
+}
+
+@media(max-width:850px) {
+.layout {
+grid-template-columns:minmax(0,1fr);
+max-width:650px;
+margin:16px auto;
+}
+.sidebar {
+display:grid;
+grid-template-columns:1fr 1fr;
+}
+.panel.settings {
+grid-row:span 2;
+}
+}
+
+@media(max-width:520px) {
+.topbar {
+height:66px;
+}
+.brand-name {
+font-size:15px;
+}
+.top-pill {
+font-size:10px;
+}
+.layout {
+padding:0 10px;
+}
+.sidebar {
+display:flex;
+}
+.game-card {
+padding:10px;
+}
+.piece {
+font-size:clamp(25px,9vw,48px);
+}
+.board-wrap {
+padding:5px;
+}
+.panel {
+padding:15px;
+}
+}
 </style>
 </head>
+
 <body>
-<header><h1>♛ CHESS MASTER PRO</h1><p>Think Strategically. Play Brilliantly.</p></header>
-<main class="container">
-<section class="game-area">
-  <div class="player" id="blackPlayer"><span>♚ Black Player</span><span id="blackLabel">Computer</span></div>
-  <div class="board" id="board" aria-label="Chess board"></div>
-  <div class="player active" id="whitePlayer"><span>♔ White Player</span><span id="whiteLabel">You</span></div>
-  <div class="status" id="status" aria-live="polite">White's turn</div>
+
+<header class="topbar">
+<div class="brand">
+<div class="brand-mark">♛</div>
+<div>
+<div class="brand-name">CHESS MASTER PRO</div>
+<div class="brand-sub">Play • Think • Win</div>
+</div>
+</div>
+<div class="top-pill">♟ &nbsp; CLASSIC CHESS</div>
+</header>
+
+<main class="layout">
+
+<section class="game-card">
+
+<div class="board-head">
+<div class="playerline">
+<div class="avatar">♚</div>
+<div>
+<span id="blackName">Computer</span>
+<small>Black pieces</small>
+</div>
+</div>
+<span class="turn-tag" id="blackTurn">BLACK</span>
+</div>
+
+<div class="board-wrap">
+<div class="board" id="board" aria-label="Chess board"></div>
+</div>
+
+<div class="board-head" style="margin:12px 2px 0">
+<div class="playerline">
+<div class="avatar">♔</div>
+<div>
+<span id="whiteName">You</span>
+<small>White pieces</small>
+</div>
+</div>
+<span class="turn-tag active" id="whiteTurn">WHITE</span>
+</div>
+
+<div class="board-foot">
+<div class="status">
+<span class="status-dot" id="statusDot"></span>
+<span id="status" aria-live="polite">White to move</span>
+</div>
+<button class="icon-btn" id="flipBtn">⇅ Flip</button>
+</div>
+
 </section>
-<aside class="side-panel">
-  <div class="panel">
-    <h2>⚙ Game Settings</h2>
-    <label for="mode">Game Mode</label>
-    <select id="mode"><option value="computer">Play vs Computer</option><option value="two">Two Players</option></select>
-    <label for="difficulty">Computer Difficulty</label>
-    <select id="difficulty"><option value="1">Easy</option><option value="2">Medium</option><option value="3">Hard</option><option value="3">Expert</option></select>
-    <label for="timerSetting">Game Timer</label>
-    <select id="timerSetting"><option value="0">Timer Off</option><option value="5">5 Minutes</option><option value="10">10 Minutes</option><option value="15">15 Minutes</option><option value="30">30 Minutes</option></select>
-    <button class="primary" id="newGame">New Game</button>
-    <button id="undo">↶ Undo Move</button>
-    <button id="flip">⇅ Flip Board</button>
-  </div>
-  <div class="panel"><h2>⏱ Chess Clock</h2><div class="timer">
-    <div class="time-box"><h3>WHITE</h3><p id="whiteTime">--:--</p></div>
-    <div class="time-box"><h3>BLACK</h3><p id="blackTime">--:--</p></div>
-  </div></div>
-  <div class="panel"><h2>📜 Move History</h2><div class="history" id="history">No moves yet.</div></div>
-  <div class="panel"><h2>♟ About the Game</h2><p class="note">Play against the computer or another player. Choose a difficulty, use the timer, review moves and undo a turn.</p></div>
+
+<aside class="sidebar">
+
+<section class="panel settings">
+
+<div class="panel-title">
+<span class="ico">⚙</span> Game Settings
+</div>
+
+<div class="field">
+<label for="mode">Game mode</label>
+<select id="mode">
+<option value="computer">Play vs Computer</option>
+<option value="two">Two Players</option>
+</select>
+</div>
+
+<div class="field">
+<label for="difficulty">Computer strength</label>
+<select id="difficulty">
+<option value="1">Beginner</option>
+<option value="2" selected>Intermediate</option>
+<option value="3">Advanced</option>
+<option value="4">Expert</option>
+</select>
+</div>
+
+<div class="field">
+<label for="timerSetting">Time control</label>
+<select id="timerSetting">
+<option value="0">No timer</option>
+<option value="3">3 minutes</option>
+<option value="5" selected>5 minutes</option>
+<option value="10">10 minutes</option>
+<option value="15">15 minutes</option>
+<option value="30">30 minutes</option>
+</select>
+</div>
+
+<div class="actions">
+<button class="action primary" id="newGame">＋ &nbsp; New Game</button>
+<button class="action" id="undo">↶ &nbsp; Undo</button>
+<button class="action" id="soundBtn">♫ &nbsp; Sound: On</button>
+</div>
+
+<p class="tip">
+Choose a mode and difficulty, then start a new game.
+Computer plays as Black.
+</p>
+
+</section>
+
+<section class="panel">
+<div class="panel-title">
+<span class="ico">◷</span> Chess Clock
+</div>
+
+<div class="clock-grid">
+<div class="clock" id="whiteClock">
+<div class="clock-label">WHITE</div>
+<div class="clock-time" id="whiteTime">05:00</div>
+</div>
+
+<div class="clock" id="blackClock">
+<div class="clock-label">BLACK</div>
+<div class="clock-time" id="blackTime">05:00</div>
+</div>
+</div>
+</section>
+
+<section class="panel">
+<div class="panel-title">
+<span class="ico">☷</span> Move History
+</div>
+
+<div class="history" id="history">
+<div class="empty">Your moves will appear here.</div>
+</div>
+
+<div class="captured-row">
+<span>Captured by White <span class="captured-pieces" id="whiteCaptured"></span></span>
+<span>Captured by Black <span class="captured-pieces" id="blackCaptured"></span></span>
+</div>
+</section>
+
 </aside>
 </main>
-<div class="footer">Chess Master Pro | Designed for Chess Lovers</div>
+
+<footer class="footer">
+CHESS MASTER PRO &nbsp;•&nbsp; A smarter way to play
+</footer>
+
 <script>
 (function(){
+
 "use strict";
 
+const $ = id => document.getElementById(id);
+
 if(typeof Chess === "undefined"){
-  document.getElementById("status").textContent =
-    "Chess engine could not load. Check your internet connection and reload.";
-  return;
+$("status").textContent =
+"Chess engine unavailable. Connect to the internet and reload.";
+$("statusDot").classList.add("thinking");
+return;
 }
 
 let game = new Chess();
-let selectedSquare = null;
-let possibleMoves = [];
+let selected = null;
+let legalMoves = [];
 let flipped = false;
 let gameOver = false;
 let botThinking = false;
-let whiteSeconds = 0;
-let blackSeconds = 0;
-let timerInterval = null;
+let soundOn = true;
+
+let whiteSeconds = 300;
+let blackSeconds = 300;
+let timerId = null;
 
 const symbols = {
-  wk:"♔", wq:"♕", wr:"♖", wb:"♗", wn:"♘", wp:"♙",
-  bk:"♚", bq:"♛", br:"♜", bb:"♝", bn:"♞", bp:"♟"
+wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",
+bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟"
 };
-const values = {p:100,n:320,b:330,r:500,q:900,k:20000};
-const $ = id => document.getElementById(id);
 
-function isComputerMode(){ return $("mode").value === "computer"; }
-function currentSideName(){ return game.turn() === "w" ? "White" : "Black"; }
+const values = {
+p:100,n:320,b:335,r:500,q:900,k:20000
+};
+
+function computerMode(){
+return $("mode").value === "computer";
+}
+
+function clearSelection(){
+selected = null;
+legalMoves = [];
+}
+
+function setStatus(text,thinking){
+$("status").textContent = text;
+$("statusDot").classList.toggle("thinking",!!thinking);
+}
 
 function startGame(){
-  game.reset();
-  selectedSquare = null;
-  possibleMoves = [];
-  flipped = false;
-  gameOver = false;
-  botThinking = false;
-  clearInterval(timerInterval);
 
-  const minutes = Number($("timerSetting").value);
-  whiteSeconds = minutes * 60;
-  blackSeconds = minutes * 60;
-  updateClock();
+clearInterval(timerId);
 
-  if(minutes > 0) timerInterval = setInterval(updateTimer,1000);
+game.reset();
+clearSelection();
 
-  $("whiteLabel").textContent = isComputerMode() ? "You" : "Player 1";
-  $("blackLabel").textContent = isComputerMode() ? "Computer" : "Player 2";
-  renderBoard();
-  updateHistory();
-  updateStatus();
+flipped = false;
+gameOver = false;
+botThinking = false;
+
+const mins = Number($("timerSetting").value);
+
+whiteSeconds = mins * 60;
+blackSeconds = mins * 60;
+
+$("whiteName").textContent =
+computerMode() ? "You" : "Player 1";
+
+$("blackName").textContent =
+computerMode() ? "Computer" : "Player 2";
+
+updateClock();
+
+if(mins > 0){
+timerId = setInterval(tickClock,1000);
+}
+
+renderBoard();
+updateHistory();
+updateStatus();
 }
 
 function renderBoard(){
-  const el = $("board");
-  el.innerHTML = "";
-  const board = game.board();
-  const last = game.history({verbose:true}).slice(-1)[0];
-  let rows = [0,1,2,3,4,5,6,7], cols = [0,1,2,3,4,5,6,7];
-  if(flipped){ rows.reverse(); cols.reverse(); }
 
-  rows.forEach(r => cols.forEach(c => {
-    const square = document.createElement("div");
-    square.className = "square " + ((r+c)%2===0 ? "light" : "dark");
-    const name = String.fromCharCode(97+c) + (8-r);
+const el = $("board");
+el.innerHTML = "";
 
-    if(selectedSquare === name) square.classList.add("selected");
-    if(last && (last.from === name || last.to === name)) square.classList.add("last");
-    const piece = board[r][c];
+const b = game.board();
+const last = game.history({verbose:true}).slice(-1)[0];
 
-    if(game.in_check() && piece && piece.type === "k" && piece.color === game.turn()){
-      square.classList.add("check");
-    }
-    const legal = possibleMoves.find(m => m.to === name);
-    if(legal) square.classList.add(legal.captured ? "capture" : "possible");
+let rows = [0,1,2,3,4,5,6,7];
+let cols = [0,1,2,3,4,5,6,7];
 
-    if(piece){
-      const span = document.createElement("span");
-      span.className = "piece " + (piece.color === "w" ? "white-piece" : "black-piece");
-      span.textContent = symbols[piece.color + piece.type];
-      square.appendChild(span);
-    }
-    square.addEventListener("click",() => handleSquareClick(name));
-    el.appendChild(square);
-  }));
-
-  $("whitePlayer").classList.toggle("active",game.turn()==="w");
-  $("blackPlayer").classList.toggle("active",game.turn()==="b");
+if(flipped){
+rows.reverse();
+cols.reverse();
 }
 
-function handleSquareClick(name){
-  if(gameOver || botThinking) return;
-  if(isComputerMode() && game.turn()==="b") return;
+rows.forEach((r,ri)=>cols.forEach((c,ci)=>{
 
-  if(selectedSquare){
-    const move = possibleMoves.find(m => m.to === name);
-    if(move){ playMove(selectedSquare,name); return; }
-  }
+const name =
+String.fromCharCode(97+c)+(8-r);
 
-  const piece = game.get(name);
-  if(piece && piece.color === game.turn()){
-    selectedSquare = name;
-    possibleMoves = game.moves({square:name,verbose:true});
-  }else{
-    selectedSquare = null;
-    possibleMoves = [];
-  }
-  renderBoard();
+const sq = document.createElement("button");
+
+sq.type = "button";
+
+sq.className =
+"square "+((r+c)%2===0?"light":"dark");
+
+sq.setAttribute("aria-label",name);
+
+if(selected===name){
+sq.classList.add("selected");
 }
 
-function playMove(from,to){
-  let move;
-  try{
-    move = game.move({from:from,to:to,promotion:"q"});
-  }catch(e){ move = null; }
-  if(!move) return;
-
-  selectedSquare = null;
-  possibleMoves = [];
-  renderBoard();
-  updateHistory();
-  updateStatus();
-
-  if(!gameOver && isComputerMode() && game.turn()==="b"){
-    botThinking = true;
-    $("status").textContent = "Computer is thinking...";
-    setTimeout(computerMove,180);
-  }
+if(last && last.from===name){
+sq.classList.add("last-from");
 }
 
-function evaluateBoard(aiColor){
-  let score = 0;
-  const board = game.board();
-  for(let r=0;r<8;r++){
-    for(let c=0;c<8;c++){
-      const p = board[r][c];
-      if(!p) continue;
-      let value = values[p.type];
-      const center = 3.5 - (Math.abs(3.5-r)+Math.abs(3.5-c))/2;
-      if(p.type==="n" || p.type==="b") value += center*12;
-      if(p.type==="p") value += (p.color==="w" ? 6-r : r-1)*5;
-      score += p.color===aiColor ? value : -value;
-    }
-  }
-  return score;
+if(last && last.to===name){
+sq.classList.add("last-to");
 }
 
-function minimax(depth,alpha,beta,maximizing,aiColor){
-  if(game.in_checkmate()) return game.turn()===aiColor ? -100000-depth : 100000+depth;
-  if(game.in_draw()) return 0;
-  if(depth===0) return evaluateBoard(aiColor);
+const p = b[r][c];
 
-  const moves = game.moves({verbose:true});
-  if(maximizing){
-    let best = -Infinity;
-    for(const m of moves){
-      game.move({from:m.from,to:m.to,promotion:m.promotion || "q"});
-      const score = minimax(depth-1,alpha,beta,false,aiColor);
+if(game.in_check() && p &&
+p.type==="k" && p.color===game.turn()){
+sq.classList.add("in-check");
+}
+
+const target = legalMoves.find(m=>m.to===name);
+
+if(target){
+sq.classList.add(
+target.captured ? "legal-capture" : "legal"
+);
+}
+
+if(p){
+
+const span = document.createElement("span");
+
+span.className =
+"piece "+(p.color==="w"?
+"white-piece":"black-piece");
+
+span.textContent = symbols[p.color+p.type];
+
+sq.appendChild(span);
+}
+
+if(ci===0){
+
+const rank = document.createElement("span");
+
+rank.className = "coord rank";
+rank.textContent = 8-r;
+
+sq.appendChild(rank);
+}
+
+if(ri===7){
+
+const file = document.createElement("span");
+
+file.className = "coord file";
+file.textContent = String.fromCharCode(97+c);
+
+sq.appendChild(file);
+}
+
+sq.addEventListener("click",()=>onSquareClick(name));
+
+el.appendChild(sq);
+
+}));
+
+const white = game.turn()==="w";
+
+$("whiteTurn").classList.toggle("active",white);
+$("blackTurn").classList.toggle("active",!white);
+
+$("whiteClock").classList.toggle(
+"active",white&&!gameOver
+);
+
+$("blackClock").classList.toggle(
+"active",!white&&!gameOver
+);
+
+$("undo").disabled =
+game.history().length===0 || botThinking;
+}
+
+function onSquareClick(name){
+
+if(gameOver || botThinking) return;
+
+if(computerMode() && game.turn()==="b") return;
+
+if(selected){
+
+const found = legalMoves.find(m=>m.to===name);
+
+if(found){
+makeMove(selected,name);
+return;
+}
+
+}
+
+const p = game.get(name);
+
+if(p && p.color===game.turn()){
+
+selected = name;
+
+legalMoves = game.moves({
+square:name,
+verbose:true
+});
+
+}else{
+
+clearSelection();
+
+}
+
+renderBoard();
+}
+
+function makeMove(from,to){
+
+let result;
+
+try{
+
+result = game.move({
+from:from,
+to:to,
+promotion:"q"
+});
+
+}catch(e){
+
+result = null;
+
+}
+
+if(!result) return;
+
+clearSelection();
+
+playSound(result.captured?"capture":"move");
+
+renderBoard();
+updateHistory();
+updateStatus();
+
+if(!gameOver && computerMode() && game.turn()==="b"){
+
+botThinking = true;
+
+setStatus("Computer is thinking…",true);
+
+renderBoard();
+
+setTimeout(computerMove,120);
+
+}
+
+}
+
+function evaluate(ai){
+
+let score = 0;
+
+const b = game.board();
+
+for(let r=0;r<8;r++){
+
+for(let c=0;c<8;c++){
+
+const p = b[r][c];
+
+if(!p) continue;
+
+let v = values[p.type];
+
+const center =
+3.5-(Math.abs(3.5-r)+Math.abs(3.5-c))/2;
+
+if(p.type==="n" || p.type==="b"){
+v += center*14;
+}
+
+if(p.type==="p"){
+v += (p.color==="w"?6-r:r-1)*7;
+}
+
+if(p.type==="k" && game.history().length<20){
+v -= center*8;
+}
+
+score += p.color===ai ? v : -v;
+
+}
+
+}
+
+return score;
+
+}
+
+function search(depth,alpha,beta,maximizing,ai){
+
+if(game.in_checkmate()){
+return game.turn()===ai ?
+-100000-depth : 100000+depth;
+}
+
+if(game.in_draw()){
+return 0;
+}
+
+if(depth===0){
+return evaluate(ai);
+}
+
+const moves = game.moves({verbose:true});
+
+if(maximizing){
+
+let best = -Infinity;
+
+for(const m of moves){
+
+game.move({
+from:m.from,
+to:m.to,
+promotion:m.promotion||"q"
+});
+
+const score =
+search(depth-1,alpha,beta,false,ai);
+
+game.undo();
+
+if(score>best) best=score;
+
+if(score>alpha) alpha=score;
+
+if(beta<=alpha) break;
+
+}
+
+return best;
+
+}else{
+
+let best = Infinity;
+
+for(const m of moves){
+
+game.move({
+from:m.from,
+to:m.to,
+promotion:m.promotion||"q"
+});
+
+const score =
+search(depth-1,alpha,beta,true,ai);
+
+game.undo();
+
+if(score<best) best=score;
+
+if(score<beta) beta=score;
+
+if(beta<=alpha) break;
+
+}
+
+return best;
+
+}
+
+}
+
+function computerMove(){
+
+if(gameOver || game.turn()!=="b"){
+botThinking = false;
+return;
+}
+
+const depth = Number($("difficulty").value);
+
+const moves = game.moves({verbose:true});
+
+if(!moves.length){
+
+botThinking = false;
+updateStatus();
+
+return;
+
+}
+
+let best = -Infinity;
+let choices = [];
+
+for(const m of moves){
+
+game.move({
+from:m.from,
+to:m.to,
+promotion:m.promotion||"q"
+});
+
+const score =
+search(depth-1,-Infinity,Infinity,false,"b");
+
+game.undo();
+
+if(score>best){
+
+best = score;
+choices = [m];
+
+}else if(score===best){
+
+choices.push(m);
+
+}
+
+}
+
+const chosen =
+choices[Math.floor(Math.random()*choices.length)];
+
+game.move({
+from:chosen.from,
+to:chosen.to,
+promotion:chosen.promotion||"q"
+});
+
+botThinking = false;
+
+playSound(chosen.captured?"capture":"move");
+
+renderBoard();
+updateHistory();
+updateStatus();
+
+}
+
+function updateStatus(){
+
+if(game.in_checkmate()){
+
+setStatus(
+"Checkmate — "+(game.turn()==="w"?"Black":"White")+" wins!"
+);
+
+finishGame();
+playSound("end");
+
+return;
+
+}
+
+if(game.in_stalemate()){
+
+setStatus("Draw — stalemate");
+
+finishGame();
+
+return;
+
+}
+
+if(game.insufficient_material() ||
+game.in_threefold_repetition() ||
+game.in_draw()){
+
+setStatus("Game drawn");
+
+finishGame();
+
+return;
+
+}
+
+if(game.in_check()){
+
+setStatus(
+(game.turn()==="w"?"White":"Black")+" is in check!"
+);
+
+playSound("check");
+
+}else{
+
+setStatus(
+(game.turn()==="w"?"White":"Black")+" to move"
+);
+
+}
+
+}
+
+function finishGame(){
+
+gameOver = true;
+botThinking = false;
+
+clearInterval(timerId);
+
+renderBoard();
+
+}
+
+function updateHistory(){
+
+const el = $("history");
+
+const h = game.history();
+
+el.innerHTML = "";
+
+if(!h.length){
+
+el.innerHTML =
+'<div class="empty">Your moves will appear here.</div>';
+
+}
+
+for(let i=0;i<h.length;i+=2){
+
+const row = document.createElement("div");
+
+row.className = "history-row";
+
+[
+String(i/2+1)+".",
+h[i]||"",
+h[i+1]||""
+].forEach(t=>{
+
+const span = document.createElement("span");
+
+span.textContent = t;
+
+row.appendChild(span);
+
+});
+
+el.appendChild(row);
+
+}
+
+const verbose = game.history({verbose:true});
+
+const whiteCaps = [];
+const blackCaps = [];
+
+verbose.forEach(m=>{
+
+if(m.captured){
+
+(m.color==="w"?whiteCaps:blackCaps)
+.push(symbols[
+(m.color==="w"?"b":"w")+m.captured
+]);
+
+}
+
+});
+
+$("whiteCaptured").textContent = whiteCaps.join(" ");
+$("blackCaptured").textContent = blackCaps.join(" ");
+
+el.scrollTop = el.scrollHeight;
+
+}
+
+function undoMove(){
+
+if(!game.history().length || botThinking) return;
+
+game.undo();
+
+if(computerMode() &&
+game.turn()==="b" &&
+game.history().length){
+
+game.undo();
+
+}
+
+gameOver = false;
+
+clearSelection();
+
+renderBoard();
+updateHistory();
+updateStatus();
+
+const mins = Number($("timerSetting").value);
+
+if(mins>0 && !timerId){
+
+timerId = setInterval(tickClock,1000);
+
+}
+
+}
+
+function flipBoard(){
+
+flipped = !flipped;
+
+renderBoard();
+
+}
+
+function fmt(s){
+
+return String(Math.floor(s/60)).padStart(2,"0")+
+":"+
+String(s%60).padStart(2,"0");
+
+}
+
+function updateClock(){
+
+const enabled =
+Number($("timerSetting").value)>0;
+
+$("whiteTime").textContent =
+enabled ? fmt(whiteSeconds) : "∞";
+
+$("blackTime").textContent =
+enabled ? fmt(blackSeconds) : "∞";
+
+}
+
+function tickClock(){
+
+if(gameOver) return;
+
+if(game.turn()==="w"){
+
+whiteSeconds--;
+
+}else{
+
+blackSeconds--;
+
+}
+
+if      const score = minimax(depth-1,alpha,beta,false,aiColor);
       game.undo();
       best = Math.max(best,score);
       alpha = Math.max(alpha,score);
