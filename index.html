@@ -1370,623 +1370,122 @@ blackSeconds--;
 
 }
 
-if      const score = minimax(depth-1,alpha,beta,false,aiColor);
-      game.undo();
-      best = Math.max(best,score);
-      alpha = Math.max(alpha,score);
-      if(beta<=alpha) break;
-    }
-    return best;
-  }else{
-    let best = Infinity;
-    for(const m of moves){
-      game.move({from:m.from,to:m.to,promotion:m.promotion || "q"});
-      const score = minimax(depth-1,alpha,beta,true,aiColor);
-      game.undo();
-      best = Math.min(best,score);
-      beta = Math.min(beta,score);
-      if(beta<=alpha) break;
-    }
-    return best;
-  }
+if(whiteSeconds<=0){
+
+whiteSeconds=0;
+
+$("status").textContent =
+"White ran out of time — Black wins";
+
+finishGame();
+
+}else if(blackSeconds<=0){
+
+blackSeconds=0;
+
+$("status").textContent =
+"Black ran out of time — White wins";
+
+finishGame();
+
 }
 
-function computerMove(){
-  if(gameOver || game.turn()!=="b"){ botThinking=false; return; }
+updateClock();
 
-  const depth = Number($("difficulty").value);
-  const moves = game.moves({verbose:true});
-  if(!moves.length){ botThinking=false; updateStatus(); return; }
-
-  let bestScore = -Infinity;
-  let bestMoves = [];
-  for(const m of moves){
-    game.move({from:m.from,to:m.to,promotion:m.promotion || "q"});
-    const score = minimax(depth-1,-Infinity,Infinity,false,"b");
-    game.undo();
-    if(score>bestScore){ bestScore=score; bestMoves=[m]; }
-    else if(score===bestScore){ bestMoves.push(m); }
-  }
-
-  const chosen = bestMoves[Math.floor(Math.random()*bestMoves.length)];
-  game.move({from:chosen.from,to:chosen.to,promotion:chosen.promotion || "q"});
-  botThinking = false;
-  renderBoard();
-  updateHistory();
-  updateStatus();
 }
 
-function updateStatus(){
-  const status = $("status");
-  if(game.in_checkmate()){
-    status.textContent = "Checkmate! " + (game.turn()==="w" ? "Black" : "White") + " wins!";
-    finishGame(); return;
-  }
-  if(game.in_stalemate()){
-    status.textContent = "Draw by stalemate!";
-    finishGame(); return;
-  }
-  if(game.insufficient_material() || game.in_threefold_repetition() || game.in_draw()){
-    status.textContent = "Game drawn!";
-    finishGame(); return;
-  }
-  status.textContent = game.in_check() ? currentSideName()+" is in check!" : currentSideName()+"'s turn";
+let audioContext = null;
+
+function playSound(type){
+
+if(!soundOn) return;
+
+try{
+
+audioContext = audioContext ||
+new (window.AudioContext||window.webkitAudioContext)();
+
+if(audioContext.state==="suspended"){
+audioContext.resume();
 }
 
-function finishGame(){
-  gameOver = true;
-  botThinking = false;
-  clearInterval(timerInterval);
-}
+const osc = audioContext.createOscillator();
+const gain = audioContext.createGain();
 
-function updateHistory(){
-  const el = $("history");
-  const history = game.history();
-  el.innerHTML = "";
-  if(!history.length){ el.textContent = "No moves yet."; return; }
-  for(let i=0;i<history.length;i+=2){
-    const row = document.createElement("div");
-    row.className = "history-row";
-    const n=document.createElement("span"), w=document.createElement("span"), b=document.createElement("span");
-    n.textContent=(i/2+1)+".";
-    w.textContent=history[i] || "";
-    b.textContent=history[i+1] || "";
-    row.append(n,w,b);
-    el.appendChild(row);
-  }
-  el.scrollTop=el.scrollHeight;
-}
+osc.connect(gain);
+gain.connect(audioContext.destination);
 
-function undoMove(){
-  if(!game.history().length) return;
-  game.undo();
-  if(isComputerMode() && game.turn()==="b" && game.history().length) game.undo();
-  gameOver=false;
-  botThinking=false;
-  selectedSquare=null;
-  possibleMoves=[];
-  renderBoard();
-  updateHistory();
-  updateStatus();
-}
+const now = audioContext.currentTime;
 
-function flipBoard(){ flipped=!flipped; renderBoard(); }
+const freq =
+type==="capture"?220:
+type==="check"?660:
+type==="end"?440:360;
 
-function formatTime(seconds){
-  return String(Math.floor(seconds/60)).padStart(2,"0")+":"+
-         String(seconds%60).padStart(2,"0");
+osc.frequency.setValueAtTime(freq,now);
+
+osc.frequency.exponentialRampToValueAtTime(
+freq*.72,now+.09
+);
+
+gain.gain.setValueAtTime(.0001,now);
+
+gain.gain.exponentialRampToValueAtTime(
+.08,now+.012
+);
+
+gain.gain.exponentialRampToValueAtTime(
+.0001,now+.13
+);
+
+osc.start(now);
+osc.stop(now+.14);
+
+}catch(e){}
+
 }
-function updateClock(){
-  const enabled=Number($("timerSetting").value)>0;
-  $("whiteTime").textContent=enabled?formatTime(whiteSeconds):"--:--";
-  $("blackTime").textContent=enabled?formatTime(blackSeconds):"--:--";
-}
-function updateTimer(){
-  if(gameOver || !gameStarted()) return;
-  if(game.turn()==="w") whiteSeconds--; else blackSeconds--;
-  if(whiteSeconds<=0){
-    whiteSeconds=0; $("status").textContent="White ran out of time. Black wins!"; finishGame();
-  }else if(blackSeconds<=0){
-    blackSeconds=0; $("status").textContent="Black ran out of time. White wins!"; finishGame();
-  }
-  updateClock();
-}
-function gameStarted(){ return !gameOver; }
 
 $("newGame").addEventListener("click",startGame);
+
 $("undo").addEventListener("click",undoMove);
-$("flip").addEventListener("click",flipBoard);
+
+$("flipBtn").addEventListener("click",flipBoard);
+
 $("mode").addEventListener("change",startGame);
+
 $("timerSetting").addEventListener("change",startGame);
-$("difficulty").addEventListener("change",() => {
-  if(isComputerMode() && game.turn()==="b" && !gameOver && !botThinking){
-    botThinking=true; setTimeout(computerMove,100);
-  }
+
+$("difficulty").addEventListener("change",()=>{
+
+if(computerMode() &&
+game.turn()==="b" &&
+!gameOver &&
+!botThinking){
+
+botThinking = true;
+
+setStatus("Computer is thinking…",true);
+
+setTimeout(computerMove,100);
+
+}
+
+});
+
+$("soundBtn").addEventListener("click",()=>{
+
+soundOn = !soundOn;
+
+$("soundBtn").textContent =
+soundOn ? "♫  Sound: On" : "♫  Sound: Off";
+
+if(soundOn) playSound("move");
+
 });
 
 startGame();
+
 })();
-</script>
-</body>
-</html>
-pieces[piece.color + piece.type];
-
-                const span = document.createElement("span");
-
-                span.className =
-                    "piece " +
-                    (piece.color === "w"
-                        ? "white-piece"
-                        : "black-piece");
-
-                span.textContent = symbol;
-
-                square.appendChild(span);
-            }
-
-            square.addEventListener("click", () => {
-                handleSquareClick(squareName);
-            });
-
-            boardElement.appendChild(square);
-        });
-    });
-
-    document.getElementById("whitePlayer")
-        .classList.toggle("active", game.turn() === "w");
-
-    document.getElementById("blackPlayer")
-        .classList.toggle("active", game.turn() === "b");
-}
-
-function handleSquareClick(square) {
-
-    if (!gameStarted || gameOver) return;
-
-    if (
-        document.getElementById("mode").value === "computer" &&
-        game.turn() === "b"
-    ) return;
-
-    const piece = game.get(square);
-
-    if (selectedSquare) {
-
-        const move = possibleMoves.find(
-            m => m.to === square
-        );
-
-        if (move) {
-
-            makeMove(selectedSquare, square);
-
-            return;
-        }
-    }
-
-    if (piece && piece.color === game.turn()) {
-
-        selectedSquare = square;
-
-        possibleMoves = game.moves({
-            square: square,
-            verbose: true
-        });
-
-    } else {
-
-        selectedSquare = null;
-        possibleMoves = [];
-    }
-
-    renderBoard();
-}
-
-function makeMove(from, to) {
-
-    try {
-
-        const move = game.move({
-            from: from,
-            to: to,
-            promotion: "q"
-        });
-
-        if (!move) return;
-
-        selectedSquare = null;
-        possibleMoves = [];
-
-        renderBoard();
-        updateHistory();
-        updateStatus();
-
-        if (!gameOver &&
-            document.getElementById("mode").value === "computer" &&
-            game.turn() === "b") {
-
-            setTimeout(computerMove, 300);
-        }
-
-    } catch (error) {
-
-        console.log(error);
-    }
-}
-
-// Computer AI
-
-const values = {
-    p: 100,
-    n: 320,
-    b: 330,
-    r: 500,
-    q: 900,
-    k: 20000
-};
-
-function evaluateBoard(aiColor) {
-
-    let score = 0;
-
-    const board = game.board();
-
-    for (let r = 0; r < 8; r++) {
-
-        for (let c = 0; c < 8; c++) {
-
-            const piece = board[r][c];
-
-            if (!piece) continue;
-
-            let value = values[piece.type];
-
-            // Encourage central control
-            const center = 3.5 -
-                (Math.abs(3.5-r) + Math.abs(3.5-c)) / 2;
-
-            if (piece.type === "n" || piece.type === "b") {
-                value += center * 12;
-            }
-
-            if (piece.type === "p") {
-                value += (piece.color === "w" ? 6-r : r-1) * 5;
-            }
-
-            score += piece.color === aiColor
-                ? value
-                : -value;
-        }
-    }
-
-    return score;
-}
-
-function minimax(depth, alpha, beta, maximizing, aiColor) {
-
-    if (game.in_checkmate()) {
-        return game.turn() === aiColor ? -100000 : 100000;
-    }
-
-    if (game.in_draw() || depth === 0) {
-        return evaluateBoard(aiColor);
-    }
-
-    const moves = game.moves({ verbose: true });
-
-    if (maximizing) {
-
-        let best = -Infinity;
-
-        for (const move of moves) {
-
-            game.move(move);
-
-            let score = minimax(
-                depth - 1,
-                alpha,
-                beta,
-                false,
-                aiColor
-            );
-
-            game.undo();
-
-            best = Math.max(best, score);
-            alpha = Math.max(alpha, score);
-
-            if (beta <= alpha) break;
-        }
-
-        return best;
-
-    } else {
-
-        let best = Infinity;
-
-        for (const move of moves) {
-
-            game.move(move);
-
-            let score = minimax(
-                depth - 1,
-                alpha,
-                beta,
-                true,
-                aiColor
-            );
-
-            game.undo();
-
-            best = Math.min(best, score);
-            beta = Math.min(beta, score);
-
-            if (beta <= alpha) break;
-        }
-
-        return best;
-    }
-}
-
-function computerMove() {
-
-    if (gameOver || game.turn() !== "b") return;
-
-    const difficulty =
-        document.getElementById("difficulty").value;
-
-    const depth = Number(difficulty);
-
-    const aiColor = "b";
-
-    const moves = game.moves({ verbose: true });
-
-    if (moves.length === 0) {
-        updateStatus();
-        return;
-    }
-
-    let bestScore = -Infinity;
-    let bestMoves = [];
-
-    for (const move of moves) {
-
-        game.move(move);
-
-        const score = minimax(
-            depth - 1,
-            -Infinity,
-            Infinity,
-            false,
-            aiColor
-        );
-
-        game.undo();
-
-        if (score > bestScore) {
-
-            bestScore = score;
-            bestMoves = [move];
-
-        } else if (score === bestScore) {
-
-            bestMoves.push(move);
-        }
-    }
-
-    if (bestMoves.length === 0) return;
-
-    const chosen =
-        bestMoves[Math.floor(Math.random() * bestMoves.length)];
-
-    game.move({
-        from: chosen.from,
-        to: chosen.to,
-        promotion: "q"
-    });
-
-    renderBoard();
-    updateHistory();
-    updateStatus();
-}
-
-// Status
-
-function updateStatus() {
-
-    const status = document.getElementById("status");
-
-    if (game.is_checkmate()) {
-
-        status.textContent =
-            "♛ Checkmate! " +
-            (game.turn() === "w" ? "Black" : "White") +
-            " wins!";
-
-        endGame();
-        return;
-    }
-
-    if (game.is_stalemate()) {
-        status.textContent = "Game Draw - Stalemate!";
-        endGame();
-        return;
-    }
-
-    if (game.is_insufficient_material() ||
-        game.is_threefold_repetition() ||
-        game.is_draw()) {
-
-        status.textContent = "Game Draw!";
-        endGame();
-        return;
-    }
-
-    if (game.in_check()) {
-        status.textContent =
-            (game.turn() === "w" ? "White" : "Black") +
-            " is in CHECK!";
-        return;
-    }
-
-    status.textContent =
-        (game.turn() === "w" ? "White" : "Black") +
-        "'s turn";
-}
-
-function endGame() {
-
-    gameOver = true;
-    gameStarted = false;
-
-    clearInterval(timerInterval);
-
-    renderBoard();
-}
-
-// Move history
-
-function updateHistory() {
-
-    const historyElement =
-        document.getElementById("history");
-
-    const history = game.history();
-
-    if (history.length === 0) {
-        historyElement.textContent = "No moves yet.";
-        return;
-    }
-
-    historyElement.innerHTML = "";
-
-    for (let i = 0; i < history.length; i += 2) {
-
-        const row = document.createElement("div");
-
-        row.className = "history-row";
-
-        const number = document.createElement("span");
-        const white = document.createElement("span");
-        const black = document.createElement("span");
-
-        number.textContent = (i / 2 + 1) + ".";
-
-        white.textContent = history[i] || "";
-        black.textContent = history[i + 1] || "";
-
-        row.append(number, white, black);
-
-        historyElement.appendChild(row);
-    }
-
-    historyElement.scrollTop =
-        historyElement.scrollHeight;
-}
-
-// Undo
-
-function undoMove() {
-
-    if (game.history().length === 0) return;
-
-    game.undo();
-
-    if (
-        document.getElementById("mode").value === "computer" &&
-        game.turn() === "b" &&
-        game.history().length > 0
-    ) {
-        game.undo();
-    }
-
-    gameOver = false;
-    gameStarted = true;
-
-    selectedSquare = null;
-    possibleMoves = [];
-
-    renderBoard();
-    updateHistory();
-    updateStatus();
-}
-
-// Flip board
-
-function flipBoard() {
-
-    flipped = !flipped;
-
-    renderBoard();
-}
-
-// Timer
-
-function updateTimer() {
-
-    if (gameOver || !gameStarted) return;
-
-    if (game.turn() === "w") {
-
-        whiteSeconds--;
-
-    } else {
-
-        blackSeconds--;
-    }
-
-    if (whiteSeconds <= 0) {
-
-        whiteSeconds = 0;
-        gameOver = true;
-        gameStarted = false;
-        clearInterval(timerInterval);
-
-        document.getElementById("status").textContent =
-            "Time out! Black wins!";
-
-    }
-
-    if (blackSeconds <= 0) {
-
-        blackSeconds = 0;
-        gameOver = true;
-        gameStarted = false;
-        clearInterval(timerInterval);
-
-        document.getElementById("status").textContent =
-            "Time out! White wins!";
-    }
-
-    updateClock();
-}
-
-function updateClock() {
-
-    function formatTime(seconds) {
-
-        const minutes = Math.floor(seconds / 60);
-        const remaining = seconds % 60;
-
-        return String(minutes).padStart(2, "0") +
-            ":" +
-            String(remaining).padStart(2, "0");
-    }
-
-    const enabled =
-        Number(document.getElementById("timerSetting").value) > 0;
-
-    document.getElementById("whiteTime").textContent =
-        enabled ? formatTime(whiteSeconds) : "--:--";
-
-    document.getElementById("blackTime").textContent =
-        enabled ? formatTime(blackSeconds) : "--:--";
-}
-
-// Initialize
-
-startGame();
-
 </script>
 
 </body>
